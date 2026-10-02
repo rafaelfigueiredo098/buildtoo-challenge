@@ -105,6 +105,20 @@ Durante o desenvolvimento considerei que:
 - todos os convites começam com o estado `pending`;
 - podem existir convites sobrepostos, sendo o conflito validado e a mensagem de erro mostrada apenas quando o utilizador tenta aceitar o convite.
 
+## Testes realizados
+Foram realizados testes manuais aos principais fluxos da aplicação, com especial atenção à regra de conflito entre reuniões.
+
+Para validar esta regra, foi testado o seguinte cenário:
+
+1. criação de uma reunião com um utilizador como participante;
+2. aceitação do convite por esse utilizador;
+3. criação de uma segunda reunião, com horário sobreposto, convidando o mesmo utilizador;
+4. tentativa de aceitação do segundo convite.
+
+Neste cenário, a aplicação impede que o utilizador aceite a segunda reunião e mantém o convite pendente, uma vez que o utilizador já possui uma reunião aceite nesse período.
+
+Foram também testados os fluxos de criação de reuniões e de aceitação e recusa de convites.
+
 ## Se tivesse mais tempo
 Com mais tempo, os próximos pontos que abordaria seriam:
 
