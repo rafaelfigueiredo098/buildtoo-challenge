@@ -1,7 +1,10 @@
 # Buildtoo Meeting Manager
-Pequena aplicação full-stack desenvolvida no âmbito do desafio técnico da Buildtoo.
 
-A aplicação permite consultar utilizadores, criar reuniões, convidar participantes, consultar reuniões e gerir os respetivos convites.
+Aplicação desenvolvida para o desafio técnico da Buildtoo.
+
+O objetivo foi criar uma aplicação simples para gestão de reuniões, onde é possível consultar utilizadores, criar reuniões, convidar participantes e aceitar ou recusar convites.
+
+Dada a minha pouca experiência com estas tecnologias, utilizei ferramentas de IA como apoio durante o desenvolvimento.
 
 ## Tecnologias utilizadas
 
@@ -16,38 +19,22 @@ A aplicação permite consultar utilizadores, criar reuniões, convidar particip
 - MongoDB
 - Mongoose
 
-## Funcionalidades
-- Consulta e pesquisa de utilizadores
-- Seleção de utilizadores para uma reunião
-- Criação de reuniões
-- Consulta das reuniões de um utilizador
-- Consulta dos participantes e do estado dos convites
-- Aceitação e recusa de convites
-- Deteção de conflitos entre reuniões aceites
-- Estados de loading, ausência de resultados e erro
-- Simulação do utilizador autenticado
-
 ## Como executar
 
-### Pré-requisitos
-É necessário ter instalado:
-- Node.js
-- npm
-- acesso a uma base de dados MongoDB
-
 ### Back-end
-Na raiz do projeto:
+Na pasta do projeto:
 ```bash
 cd backend
 npm install
 ```
 
-Criar um ficheiro `.env` dentro da pasta `backend`:
+Criar um ficheiro `.env` dentro da pasta `backend` com:
 ```env
 MONGODB_URI=your_mongodb_connection_string
 PORT=3000
 ```
-Para popular a base de dados com os utilizadores de exemplo:
+
+Para adicionar alguns utilizadores de exemplo à base de dados:
 ```bash
 npm run seed
 ```
@@ -57,7 +44,7 @@ Iniciar o servidor:
 npm run dev
 ```
 
-A API ficará disponível em:
+O back-end fica disponível em:
 ```text
 http://localhost:3000
 ```
@@ -70,7 +57,7 @@ npm install
 npm run dev
 ```
 
-A aplicação ficará disponível em:
+A aplicação fica disponível em:
 ```text
 http://localhost:5173
 ```
@@ -78,75 +65,53 @@ http://localhost:5173
 ## Decisões técnicas
 
 ### Autenticação
-Optei por simular o utilizador autenticado, uma vez que a implementação de autenticação não constitui um dos principais objetivos do exercício.
+Optei por simular o utilizador autenticado, uma vez que a autenticação não era o foco principal do exercício.
 
-Foi adicionado um seletor de utilizador na interface. Desta forma, é possível simular diferentes utilizadores e demonstrar facilmente os fluxos de aceitação e recusa de convites sem introduzir complexidade adicional de autenticação.
+Adicionei um dropdown para selecionar o utilizador pretendido de forma a testar a aplicação facilmente com diferentes utilizadores, nomeadamente a aceitação/recusa de convites e a validação de erro caso o utilizador aceite uma meeting sobreposta.
 
-### Representação da data e hora
-Apesar de a interface permitir introduzir a data e a hora de início separadamente, estes valores são armazenados no back-end num único campo `startAt`.
+### Data e hora das reuniões
+No front-end, a data e a hora são introduzidas separadamente. No back-end são guardadas num único campo `startAt`, o que simplifica a comparação dos horários das reuniões.
 
-Esta opção simplifica as comparações temporais necessárias para a deteção de conflitos entre reuniões.
+Tal como indicado no enunciado, considerei que todas as reuniões têm a duração de uma hora.
 
-De acordo com a indicação do enunciado, assumi que todas as reuniões têm a duração de uma hora.
-
-### Estado dos convites
-Cada participante possui um dos seguintes estados:
+### Estados dos convites
+Cada participante pode ter um dos seguintes estados:
 - `pending`
 - `accepted`
 - `declined`
 
-O estado do convite é armazenado juntamente com o participante em cada reunião.
+Quando uma reunião é criada, os participantes começam com o estado `pending`. Cada utilizador deve posteriormente aceitar/ recusar a reunião.
 
-### Deteção de conflitos
-Um utilizador pode receber vários convites para reuniões que decorram no mesmo período.
+### Conflitos entre reuniões
+Um utilizador pode receber vários convites para reuniões no mesmo horário, mas não pode aceitar uma reunião se já tiver outra reunião aceite que se sobreponha a esse horário.
 
-No entanto, no momento em que tenta aceitar um convite, o back-end verifica as restantes reuniões já aceites pelo utilizador.
+Optei por fazer esta validação no back-end, uma vez que se trata de uma regra de negócio e não deve depender apenas do front-end.
 
-Existe sobreposição quando:
-```text
-newStart < existingEnd && newEnd > existingStart
-```
+Caso exista um conflito, a API devolve `409 Conflict`, é mostrado um erro ao utilizador, e o convite mantém o estado anterior.
 
-Caso seja identificado um conflito, a API devolve `409 Conflict` e o convite não é aceite.
+### Estrutura
+Mantive o front-end e o back-end separados.
 
-Esta regra foi implementada no back-end, em vez de depender apenas da interface, garantindo que a regra de negócio não pode ser contornada pelo cliente.
+No back-end separei os modelos e as rotas. Como se trata de uma aplicação pequena e o tempo disponível para o desafio era limitado, optei por manter a restante estrutura simples.
 
-### Estrutura do projeto
-O front-end e o back-end foram mantidos como aplicações separadas.
-
-No back-end, os modelos e as rotas encontram-se separados. Tendo em conta a dimensão e o tempo disponível para o exercício, optei por não introduzir camadas adicionais de abstração.
-
-Numa aplicação de maior dimensão, a lógica de negócio poderia ser extraída para controllers e services dedicados.
+Numa aplicação de maior dimensão, faria sentido separar melhor a lógica de negócio em controllers e services.
 
 ## Assunções
-Durante a implementação foram consideradas as seguintes assunções:
+Durante o desenvolvimento considerei que:
 
 - todas as reuniões têm a duração de uma hora;
-- a autenticação encontra-se fora do âmbito principal do exercício e foi simulada;
-- o organizador pertence implicitamente à reunião e não necessita de convite;
-- os participantes convidados começam com o estado `pending`;
-- um utilizador pode receber um convite para uma reunião que entre em conflito com outra já aceite;
-- o conflito apenas impede a aceitação do convite;
-- as datas são comunicadas entre o front-end e o back-end através de valores ISO.
+- o utilizador autenticado é simulado;
+- o organizador não necessita de receber um convite para a própria reunião;
+- todos os convites começam com o estado `pending`;
+- podem existir convites sobrepostos, sendo o conflito validado e a mensagem de erro mostrada apenas quando o utilizador tenta aceitar o convite.
 
-## Se tivesse mais tempo...
+## Se tivesse mais tempo
+Com mais tempo, os próximos pontos que abordaria seriam:
 
-Os próximos pontos que consideraria seriam:
-- adicionar testes automatizados, sobretudo para a regra de conflito entre reuniões;
+- adicionar testes automatizados, principalmente para a validação de conflitos entre reuniões;
 - melhorar a validação dos dados recebidos pela API;
-- separar a lógica de negócio em controllers/services;
-- implementar autenticação e autorização;
-- melhorar o tratamento de datas e fusos horários;
-- tratar possíveis condições de corrida na aceitação simultânea de convites;
-- adicionar documentação da API;
-- adicionar paginação e filtros;
-- melhorar a acessibilidade;
-- adicionar testes end-to-end;
-- adicionar Docker;
-- configurar CI.
+- validar melhor o tratamento das datas e fusos horários;
+- implementar autenticação real e mecanismos de autorização.
 
 ## Nota final
-
-A implementação foi intencionalmente mantida simples e focada nos requisitos principais do exercício.
-
-Tendo em conta o tempo sugerido para a realização do desafio, priorizei a implementação dos principais fluxos da aplicação e da regra de negócio associada aos conflitos entre reuniões, em vez de adicionar funcionalidades ou infraestrutura opcionais.
+Tendo em conta o tempo sugerido para o desafio, procurei manter a solução simples e focar-me nas funcionalidades principais e na regra de negócio relativa aos conflitos entre reuniões.
